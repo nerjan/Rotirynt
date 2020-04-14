@@ -14,7 +14,7 @@ public class Rotate : MonoBehaviour
     public float speed_of_rotation = 2f;
     int i = 1;
 
-    GameObject Middle;    
+    GameObject Center;    
 	GameObject Map;
     Rigidbody2D rigidBody;
     Collider2D collider;
@@ -24,7 +24,7 @@ public class Rotate : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Middle = GameObject.Find("Centre");
+        Center = GameObject.Find("Center");
 		Map = GameObject.Find("Map");
         rigidBody = GetComponent<Rigidbody2D>();
         collider = GetComponent<Collider2D>();
@@ -41,6 +41,7 @@ public class Rotate : MonoBehaviour
     {
         TurnRight();
         TurnLeft();
+        EnableButtons();
     }
 
 	void SetIsRotating(ref bool isRotating)
@@ -68,23 +69,23 @@ public class Rotate : MonoBehaviour
     {
 		PrepareObjectsToRotation(ref isRotating);
 		
-        transform.RotateAround(Middle.transform.position, Vector3.forward, -direction * speed_of_rotation);
+        transform.RotateAround(Center.transform.position, Vector3.forward, -direction * speed_of_rotation);
         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, 0, transform.eulerAngles.z + direction * speed_of_rotation), 1);
-		Map.transform.RotateAround(Middle.transform.position, Vector3.forward, -direction * speed_of_rotation);
+		Map.transform.RotateAround(Center.transform.position, Vector3.forward, -direction * speed_of_rotation);
 		
         i++;
         //do full 90 degrees rotation
         if (i > 90 / speed_of_rotation)
         {
-            i = 1;
+            i = 1;           
 			UnprepareObjectsToRotation(ref isRotating);
         }
     }
 	
 	void PrepareObjectsToRotation(ref bool isRotating)
 	{
-		buttonTurnRight.enabled = false;
-		buttonTurnLeft.enabled = false;
+        buttonTurnRight.enabled = false;
+        buttonTurnLeft.enabled = false;
         //freez physics
         rigidBody.Sleep();
         collider.isTrigger = true;
@@ -97,7 +98,16 @@ public class Rotate : MonoBehaviour
             //unfreez physics
             rigidBody.WakeUp();
             collider.isTrigger = false;
-			buttonTurnRight.enabled = true;
-			buttonTurnLeft.enabled = true;
+//			buttonTurnRight.enabled = true;
+//			buttonTurnLeft.enabled = true;
 	}
+
+    void EnableButtons()
+    {
+        if ((rigidBody.velocity.y > -0.001f) && (rigidBody.velocity.y < 0.0f) && !isRotatingLeft && !isRotatingRight)
+        {
+            buttonTurnRight.enabled = true;
+            buttonTurnLeft.enabled = true;
+        }
+    }
 }
