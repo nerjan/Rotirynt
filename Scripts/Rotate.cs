@@ -13,6 +13,7 @@ public class Rotate : MonoBehaviour
 
     public float speed_of_rotation = 2f;
     int i = 1;
+    int moves = 0;
 
     GameObject Center;    
 	GameObject Map;
@@ -20,6 +21,10 @@ public class Rotate : MonoBehaviour
     Collider2D collider;
     Button buttonTurnRight;
     Button buttonTurnLeft;
+    public Text textMoves;
+    public GameObject fallingBox;
+    Collider2D fallingBoxBoxCollider;
+    Rigidbody2D fallingBoxRigidBody;
 
     // Start is called before the first frame update
     void Start()
@@ -28,8 +33,10 @@ public class Rotate : MonoBehaviour
 		Map = GameObject.Find("Map");
         rigidBody = GetComponent<Rigidbody2D>();
         collider = GetComponent<Collider2D>();
-		
-		buttonTurnRight = GameObject.Find("ButtonTurnRight").GetComponent<Button>();
+        fallingBoxRigidBody = fallingBox.GetComponent<Rigidbody2D>();
+        fallingBoxBoxCollider = fallingBox.GetComponent<Collider2D>();
+
+        buttonTurnRight = GameObject.Find("ButtonTurnRight").GetComponent<Button>();
 		buttonTurnRight.onClick.AddListener(delegate {SetIsRotating(ref isRotatingRight); });
         buttonTurnLeft = GameObject.Find("ButtonTurnLeft").GetComponent<Button>();
 		buttonTurnLeft.onClick.AddListener(delegate {SetIsRotating(ref isRotatingLeft); });
@@ -42,12 +49,18 @@ public class Rotate : MonoBehaviour
         TurnRight();
         TurnLeft();
         EnableButtons();
+        PreventBpuncingOfFallingBox();
+        ChangeMovesNumber();
+        //Debug.Log(fallingBoxRigidBody.freezeRotation);
     }
 
 	void SetIsRotating(ref bool isRotating)
 	{
 		isRotating = true;
-	}
+        moves++;
+        fallingBoxRigidBody.constraints = RigidbodyConstraints2D.None;
+
+    }
 	
     public void TurnRight()
     {
@@ -90,17 +103,22 @@ public class Rotate : MonoBehaviour
         rigidBody.Sleep();
         collider.isTrigger = true;
         isRotating = true;
-	}
+        fallingBoxRigidBody.Sleep();
+        fallingBoxBoxCollider.isTrigger = true;
+
+    }
 	
 	void UnprepareObjectsToRotation(ref bool isRotating)
 	{
-		    isRotating = false; //leave loop
+		    isRotating =     false; //leave loop
             //unfreez physics
             rigidBody.WakeUp();
             collider.isTrigger = false;
-//			buttonTurnRight.enabled = true;
-//			buttonTurnLeft.enabled = true;
-	}
+            fallingBoxRigidBody.WakeUp();
+            fallingBoxBoxCollider.isTrigger = false;
+        //			buttonTurnRight.enabled = true;
+        //			buttonTurnLeft.enabled = true;
+    }
 
     void EnableButtons()
     {
@@ -110,4 +128,17 @@ public class Rotate : MonoBehaviour
             buttonTurnLeft.enabled = true;
         }
     }
+
+    void PreventBpuncingOfFallingBox()
+    {
+        if ((fallingBoxRigidBody.velocity.y > -0.001f) && (fallingBoxRigidBody.velocity.y < 0.0f) && !isRotatingLeft && !isRotatingRight)
+        {
+            fallingBoxRigidBody.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
+    }
+    public void ChangeMovesNumber()
+    {
+         textMoves.text = moves.ToString();
+    }
+
 }
